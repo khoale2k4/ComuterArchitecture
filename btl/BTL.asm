@@ -19,6 +19,8 @@
 	lsb: 		.ascii "LSB: \0"
 	add_tag:	.ascii "Add: \t\0"
 	shift_tag:	.ascii "Shift: \t\0"	
+	open_brackets:	.ascii " (\0"
+	close_brackets:	.ascii ") \0"
 	#s0:	so bi nha
 	#s1:	so nhan
 	#s2:	bit cao cua tich
@@ -41,7 +43,16 @@ main:
 	syscall	
 	li $v0, 35
     	move $a0, $s0
+    	syscall	
+	li $v0, 4
+	la $a0, open_brackets
+	syscall	
+	li $v0, 1
+    	move $a0, $s0
     	syscall
+	li $v0, 4
+	la $a0, close_brackets
+	syscall	
 	
 	li $v0, 4
 	la $a0, newline
@@ -51,6 +62,15 @@ main:
 	li $v0, 35
     	move $a0, $s1
     	syscall
+	li $v0, 4
+	la $a0, open_brackets
+	syscall	
+	li $v0, 1
+    	move $a0, $s1
+    	syscall
+	li $v0, 4
+	la $a0, close_brackets
+	syscall	
 	
 	jal neg_or_pos
 	
@@ -167,7 +187,7 @@ least_significant_bit:
 		jr $ra
 
 add_hi:
-	add $s2, $s2, $s0
+	addu $s2, $s2, $s0
 		
 	li $v0, 4
 	la $a0, add_tag
@@ -212,6 +232,8 @@ shift_right:
 	jr $ra		
 			
 neg_or_pos:
+	beqz $s0, zero1
+	beqz $s1, zero1
 	#t6: 	kiem tra so bi nhan va so nhan co cung dau khong
 
 	#t4:	kiem tra so bi nhan am
@@ -227,6 +249,11 @@ neg_or_pos:
 	sgt $t5, $s1, 0
 	mul $t6, $t4, $t5
 	bnez $t6, return
+	
+	j return
+	
+	zero1:
+	addi $t6, $t6, 1
 	
 	return:
 	abs $s0, $s0
@@ -327,7 +354,7 @@ loop1:
 	
 	mul $t2, $t4, $t1
 	
-	add $s0, $s0, $t2
+	addu $s0, $s0, $t2
 	div $t4, $t4, 10
 	skip_signed_num1:
 	addi $t0, $t0, 1
@@ -343,7 +370,7 @@ loop2:
 	subi $t1, $t1, 48
 	
 	mul $t3, $t5, $t1
-	add $s1, $s1, $t3
+	addu $s1, $s1, $t3
 	div $t5, $t5, 10
 	skip_signed_num2:
 	addi $t0, $t0, 1
