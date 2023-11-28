@@ -11,6 +11,8 @@
 	remind1: 	.ascii "So bi nhan (32 bit): \0"
 	remind2: 	.ascii "So nhan (32 bit): \0"
 	result: 	.ascii "Ket qua duoi dang nhi phan (64 bit): \0"
+	isneg:		.ascii "Ket qua la so am, ta thuc hien nhan khong dau sau do them dau tru vao ket qua\0"
+	toneg:		.ascii "Them dau tru vao ket qua\0"
 	step:		.ascii "Step \0"
 	space: 		.ascii "\t\0"
 	newline: 	.ascii "\n\0"
@@ -74,6 +76,16 @@ main:
 	
 	jal neg_or_pos
 	
+	bnez $t6, not_neg
+	
+	li $v0, 4
+	la $a0, newline
+	syscall	
+	la $a0, isneg
+	syscall	
+	
+not_neg:
+	
 	ori $s3, $s1, 0
 	li $v0, 4
 	la $a0, newline
@@ -107,6 +119,13 @@ end:
 	#t6: 	kiem tra so bi nhan va so nhan co cung dau khong
 	bnez $t6, pos
 	neg:
+	
+	li $v0, 4
+	la $a0, toneg
+	syscall	
+	la $a0, newline
+	syscall	
+	
 	bnez $s2, neg_hi
 	ori $s2, $s2, 0xFFFFFFFF
 	mul $s3, $s3, -1
