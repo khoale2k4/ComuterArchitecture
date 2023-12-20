@@ -126,12 +126,20 @@ end:
 	la $a0, newline
 	syscall	
 	
-	bnez $s2, neg_hi
-	ori $s2, $s2, 0xFFFFFFFF
-	mul $s3, $s3, -1
-	j pos
-	neg_hi:
-	mul $s2, $s2, -1
+	not $s2, $s2
+	not $s3, $s3
+	
+	li $t0, 0xFFFFFFFF
+	xor $t0, $t0, $s3
+	bnez $t0, lo_not_max 
+	
+	addiu $s2, $s2, 1
+	
+	lo_not_max:
+	
+	addiu $s3, $s3, 1
+	
+	
 	pos:
 	
 	li $v0, 4
