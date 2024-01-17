@@ -1,0 +1,166 @@
+#Chuong trinh 22.3: switch - case
+#-----------------------------------
+#Data segment
+		.data
+#Cac cau nhac nhap/xuat du lieu
+	input_case: .asciiz "Nhap case: "
+	show_result: .asciiz "Ket qua: "
+#-----------------------------------
+#Code segment
+.text
+#-----------------------------------
+#Chuong trinh chinh
+#-----------------------------------
+main:
+#Nhap (syscall)
+   #Nhap input
+	li $v0, 4
+	la $a0, input_case
+	syscall
+	li $v0, 5
+	syscall
+   #Xu ly
+	move $s0, $v0
+     #t0=0, t1= 100, t2=2
+	li $t0, 0
+	li $t1, 100
+	li $t2, 2
+     # switch - kiem tra gia tri input
+	beq $s0, 1, case1
+	beq $s0, 2, case2
+	beq $s0, 3, case3
+	beq $s0, 4, case4
+	j print
+     # case 1: a=b+c
+case1:
+	add $t0, $t1, $t2
+	j print
+     # case 1: a=b-c
+case2:
+	sub $t0, $t1, $t2
+	j print
+     # case 1: a=b*c
+case3:
+	mul $t0, $t1, $t2
+	j print
+     # case 1: a=b/c
+case4:
+	div $t0, $t1, $t2
+	j print
+#Xuat ket qua (syscall)
+print:
+	la $a0, show_result
+	li $v0, 4
+	syscall
+	move $a0, $t0
+	li $v0, 1
+	syscall
+
+#Chuong trinh 22.4: tinh Fibonacci dung for
+#-----------------------------------
+#Data segment
+		.data
+#Cac cau nhap/xuat du lieu
+input_n: .asciiz "Nhap n: "
+result_fail: .asciiz "invalid input"
+#-----------------------------------
+#Code segment
+		.text
+#-----------------------------------
+#Chuong trinh chinh
+#-----------------------------------
+main:
+#Nhap (syscall)
+	#Nhap n
+		li $v0, 4
+		la $a0, input_n
+		syscall
+		li $v0, 5
+		syscall
+		move $t0, $v0
+	#Tro den failcase neu t0 < 0
+		bltz $t0, failcase
+	#Kiem tra gia tri t0, neu <= 1 thi tro den printn
+		addi $k1, $t0, -1
+		blez $k1, printn
+	#f[0]=0, f[2]=1, bo dem vong lap k, so thu tu Fibo s4
+		li $s0, 0
+		li $s1, 1
+		li $k0, 2
+		add $s4, $t0, 1
+#LOOP
+loop:
+	add $s2, $s1, $s0
+	add $s0, $s1, 0
+	add $s1, $s2, 0
+	add $k0, $k0, 1
+	bne $k0, $s4, loop
+	j print
+printn:
+	move $a0, $t0
+	li $v0, 1
+	syscall
+	j end
+#In ket qua
+print:
+	move $a0, $s2
+	li $v0, 1
+	syscall
+	j end
+#In result_fail neu khong thoa man dieu kien
+failcase:
+	li $v0, 4
+	la $a0, result_fail
+	syscall
+	j end
+#ket thuc chuong trinh (syscall)
+end: addiu $v0,$zero,10
+syscall
+#-----------------------------------
+	
+
+Bài làm thêm 2:
+
+(a)
+
+Theo kiến trúc BIG ENDIAN, các byte trong một từ 32 bit được lưu trữ theo thứ tự từ cao đến thấp. Do đó, nội dung của vùng nhớ dữ liệu trong chương trình như sau:
+
+0xCA002018
+0xFF
+0x2018
+0xCA
+0xFE
+0xED
+
+
+(a)
+
+Theo kiến trúc BIG ENDIAN, các byte trong một từ 32 bit được lưu trữ theo thứ tự từ cao đến thấp. Do đó, nội dung của vùng nhớ dữ liệu trong chương trình như sau:
+
+0xCA002018
+0xFF
+0x2018
+0xCA
+0xFE
+0xED
+Các lệnh gây ra lỗi khi thực thi là:
+
+Lệnh lh $t2, 2($a0): Lệnh này truy cập vào địa chỉ int_1 + 2, nhưng int_1 chỉ có 4 byte, do đó địa chỉ này không hợp lệ.
+Lệnh lh $t3, 3($a0): Lệnh này cũng truy cập vào địa chỉ int_1 + 3, nhưng int_1 chỉ có 4 byte, do đó địa chỉ này cũng không hợp lệ.
+Lệnh lb $t4, 0($a0): Lệnh này truy cập vào địa chỉ int_1 + 0, nhưng int_1 có độ dài 4 byte, do đó chỉ có 4 byte đầu tiên của int_1 là hợp lệ. Lệnh này sẽ đọc 4 byte đầu tiên của int_1 và lưu vào t4.
+Lệnh lb $t5, 1($a0): Lệnh này cũng truy cập vào địa chỉ int_1 + 1, nhưng chỉ có 3 byte còn lại của int_1 là hợp lệ. Lệnh này sẽ đọc 3 byte còn lại của int_1 và lưu vào t5.
+
+Để cải thiện hiệu năng truy cập bộ nhớ, chúng ta có thể sắp xếp lại dữ liệu như sau:
+
+char_1: .byte 0xFF
+int_1: .word 0xCA002018
+int_2: .word 2018
+char_2: .byte 0xCA 0xFE 0xED
+Với cách sắp xếp này, tất cả các dữ liệu đều được lưu trữ ở các địa chỉ bộ nhớ hợp lệ. Ngoài ra, các dữ liệu cùng loại cũng được lưu trữ gần nhau, giúp cho bộ xử lý có thể truy cập chúng nhanh hơn.
+
+Cụ thể, các lệnh lw $t0, 0($a0) và lw $t1, 1($a0) sẽ đọc hai từ 32 bit đầu tiên của vùng nhớ dữ liệu. Lệnh lh $t2, 2($a0) sẽ đọc hai byte đầu tiên của int_2. Lệnh lh $t3, 3($a0) sẽ đọc hai byte còn lại của int_2. Lệnh lb $t4, 0($a0) sẽ đọc byte đầu tiên của char_1. Lệnh lb $t5, 1($a0) sẽ đọc byte thứ hai của char_1.
+
+Với cách sắp xếp này, tất cả các lệnh đều truy cập vào các địa chỉ bộ nhớ hợp lệ và có thể được thực thi mà không gây ra lỗi.
+
+
+		
